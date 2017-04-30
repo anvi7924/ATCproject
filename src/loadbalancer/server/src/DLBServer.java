@@ -1,4 +1,4 @@
-import commands.FindLoadBalancerCommand;
+import queries.FindLoadBalancerQuery;
 import dlbcommands.RegisterCommand;
 import dlbcommands.RemoveCommand;
 import io.atomix.catalyst.transport.Address;
@@ -74,7 +74,7 @@ public class DLBServer {
 						.build())
 				.build();
 
-		_copycatServer.serializer().register(FindLoadBalancerCommand.class);
+		_copycatServer.serializer().register(FindLoadBalancerQuery.class);
 		_copycatServer.serializer().register(RegisterCommand.class);
 		_copycatServer.serializer().register(RemoveCommand.class);
 

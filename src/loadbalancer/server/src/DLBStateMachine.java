@@ -1,4 +1,4 @@
-import commands.FindLoadBalancerCommand;
+import queries.FindLoadBalancerQuery;
 import dlbcommands.RegisterCommand;
 import dlbcommands.RemoveCommand;
 import io.atomix.catalyst.transport.Address;
@@ -7,6 +7,8 @@ import io.atomix.copycat.server.Snapshottable;
 import io.atomix.copycat.server.StateMachine;
 import io.atomix.copycat.server.storage.snapshot.SnapshotReader;
 import io.atomix.copycat.server.storage.snapshot.SnapshotWriter;
+
+import java.util.Random;
 
 public class DLBStateMachine extends StateMachine implements Snapshottable {
 	private DLBState state = new DLBState();
@@ -32,11 +34,10 @@ public class DLBStateMachine extends StateMachine implements Snapshottable {
 			Address srvAddr = new Address(srvhost, srvport);
 			Address lbAddr = new Address(lbhost, lbport);
 
-			if(state.loadBalancers.containsValue(lbAddr)) {
+			if(state.loadBalancers.containsKey(srvAddr)) {
 				System.out.printf("Found address %s:%d in list, not adding\n", lbAddr.host(), lbAddr.port());
 				return true;
 			}
-
 
 			System.out.printf("Adding address %s:%d to list\n", lbAddr.host(), lbAddr.port());
 
@@ -77,24 +78,17 @@ public class DLBStateMachine extends StateMachine implements Snapshottable {
 		}
 	}
 
-	public Address FindLoadBalancer(Commit<FindLoadBalancerCommand> commit)
+	public Address FindLoadBalancer(Commit<FindLoadBalancerQuery> commit)
 	{
 		try {
-			System.out.println("Handling find load balancer command.");
+			System.out.println("Handling find load balancer query.");
 
-			if(state.loadBalancers.size() == 0)
-				return null;
+			Random rand = new Random();
+			Integer randOffset = rand.nextInt(state.keyList.size());
 
-			if(state.currentOffset >= state.keyList.size())
-				state.currentOffset = 0;
+			Address key = state.keyList.get(randOffset);
 
-			Address key = state.keyList.get(state.currentOffset);
-
-			Address addr = state.loadBalancers.get(key);
-
-			state.currentOffset++;
-
-			return addr;
+			return state.loadBalancers.get(key);
 		}
 		catch (Exception ex) {
 			return null;
